@@ -1,7 +1,7 @@
 services:
   django:
     build:
-      context: ./relizene_website_readbook
+      context: ./django
       dockerfile: Dockerfile.multistage 
     container_name: django-app
     restart: 'on-failure'
@@ -18,11 +18,11 @@ services:
       - NAME_POSTGRES=${NAME_POSTGRES}
       - USER_POSTGRES=${USER_POSTGRES}
       - PASSWORD_POSTGRES=${PASSWORD_POSTGRES}
-      - HOST_POSTGRES=postgres  # ← использовать имя сервиса
-      - PORT_POSTGRES=5432      # ← стандартный порт
+      - HOST_POSTGRES=postgres  
+      - PORT_POSTGRES=5432      
     depends_on:
       postgres:
-        condition: service_healthy  # ← ждать пока БД готова
+        condition: service_healthy  
       mongodb:
         condition: service_started
       fastapi:
@@ -31,7 +31,7 @@ services:
       - "80:8000"
 
   postgres:
-    image: postgres:15  # ⚠️ НЕ используй latest, укажи версию
+    image: postgres:15 
     container_name: postgres_container
     environment:
       POSTGRES_USER: ${USER_POSTGRES}
@@ -54,16 +54,15 @@ services:
 
   fastapi:
     build:
-      context: ./relizene_fastapi_bookread
+      context: ./fastapi
       dockerfile: Dockerfile.multistage 
     container_name: fastapi-app
     restart: unless-stopped
     environment:
       - MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/
-    # ⚠️ НЕТ ports - сервис внутренний!
 
   mongodb:
-    image: mongo:4.4  # ⚠️ Обнови до актуальной версии
+    image: mongo:4.4 
     container_name: mongodb
     restart: unless-stopped
     environment:
