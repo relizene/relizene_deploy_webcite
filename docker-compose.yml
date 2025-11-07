@@ -37,12 +37,6 @@ services:
       POSTGRES_USER: ${USER_POSTGRES}
       POSTGRES_PASSWORD: ${PASSWORD_POSTGRES}
       POSTGRES_DB: ${NAME_POSTGRES}
-      LC_ALL: ru_RU.UTF-8
-      LANG: ru_RU.UTF-8
-    command: >
-      postgres
-      -c default_text_search_config=russian
-      -c shared_preload_libraries=pg_trgm,unaccent 
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
