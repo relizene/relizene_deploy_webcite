@@ -1,0 +1,8 @@
+[submodule "fastapi"]
+	path = fastapi
+	url = https://github.com/relizene/relizene_fastapi_bookread
+	branch = deploy
+[submodule "django"]
+	path = django
+	url = https://github.com/relizene/relizene_website_readbook
+	branch = deploy

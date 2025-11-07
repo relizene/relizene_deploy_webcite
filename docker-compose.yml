@@ -1,0 +1,82 @@
+services:
+  django:
+    build:
+      context: ./relizene_website_readbook
+      dockerfile: Dockerfile.multistage 
+    container_name: django-app
+    restart: 'on-failure'
+    environment:
+      - DEBUG=${DEBUG}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - UPLOAD_BOOK=${UPLOAD_BOOK}
+      - DELETE_BOOK=${DELETE_BOOK}
+      - GET_PAGE_BOOK=${GET_PAGE_BOOK}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_STORAGE_BUCKET_NAME=${AWS_STORAGE_BUCKET_NAME}
+      - NAME_POSTGRES=${NAME_POSTGRES}
+      - USER_POSTGRES=${USER_POSTGRES}
+      - PASSWORD_POSTGRES=${PASSWORD_POSTGRES}
+      - HOST_POSTGRES=postgres  # ← использовать имя сервиса
+      - PORT_POSTGRES=5432      # ← стандартный порт
+    depends_on:
+      postgres:
+        condition: service_healthy  # ← ждать пока БД готова
+      mongodb:
+        condition: service_started
+      fastapi:
+        condition: service_started
+    ports:
+      - "80:8000"
+
+  postgres:
+    image: postgres:15  # ⚠️ НЕ используй latest, укажи версию
+    container_name: postgres_container
+    environment:
+      POSTGRES_USER: ${USER_POSTGRES}
+      POSTGRES_PASSWORD: ${PASSWORD_POSTGRES}
+      POSTGRES_DB: ${NAME_POSTGRES}
+      LC_ALL: ru_RU.UTF-8
+      LANG: ru_RU.UTF-8
+    command: >
+      postgres
+      -c default_text_search_config=russian
+      -c shared_preload_libraries=pg_trgm,unaccent 
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USER_POSTGRES} -d ${NAME_POSTGRES}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  fastapi:
+    build:
+      context: ./relizene_fastapi_bookread
+      dockerfile: Dockerfile.multistage 
+    container_name: fastapi-app
+    restart: unless-stopped
+    environment:
+      - MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/
+    # ⚠️ НЕТ ports - сервис внутренний!
+
+  mongodb:
+    image: mongo:4.4  # ⚠️ Обнови до актуальной версии
+    container_name: mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: mongosh --eval "db.adminCommand('ping')" localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+  mongo_data:
