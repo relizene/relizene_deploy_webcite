@@ -66,7 +66,7 @@ services:
       - MONGO_URL=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/
 
   mongodb:
-    image: mongo:5-alpine
+    image: mongo:5.0
     container_name: mongodb
     restart: unless-stopped
     environment:
@@ -74,11 +74,15 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
       - mongo_data:/data/db
+    command: >
+      --wiredTigerCacheSizeGB 0.25
+      --quiet
+      --bind_ip_all
     deploy:
       resources:
         limits:
           cpus: '0.3'
-          memory: 256M
+          memory: 384M
     healthcheck:
       test: mongosh --eval "db.adminCommand('ping')" localhost:27017/test --quiet
       interval: 10s
