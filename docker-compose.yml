@@ -38,7 +38,7 @@ services:
       POSTGRES_PASSWORD: ${PASSWORD_POSTGRES}
       POSTGRES_DB: ${NAME_POSTGRES}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_17:/var/lib/postgresql/data
     command: >
       postgres
       -c shared_buffers=64MB
@@ -90,5 +90,5 @@ services:
       retries: 5
 
 volumes:
-  postgres_data:
+  postgres_data_17:
   mongo_data:
